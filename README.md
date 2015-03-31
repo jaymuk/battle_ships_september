@@ -1,3 +1,5 @@
+Tryint the Battleship web version with Caron, Ben and Jacob
+
 #BattleShips
 
 The game is ready to play when theres are two players initialized with a board each and each board has 5 ships placed. 
