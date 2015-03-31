@@ -1,6 +1,9 @@
 require 'sinatra/base'
+# Dir[File.dirname(__FILE__) + '/lib/*.rb'].each {|file| require file }
 
 class BattleShips < Sinatra::Base
+
+# GAME = Game.new
   set :views, Proc.new { File.join(root,"..", "views")}
   get '/' do
     erb :index
@@ -13,6 +16,8 @@ class BattleShips < Sinatra::Base
 
   get '/start' do
     @player = params[:name]
+    # @game = Game.new(Player.new('Guillaume'), Player.new('Caron'))
+    # @player_one_name = @game.player_1.name
     erb :take_a_shot
   end
 

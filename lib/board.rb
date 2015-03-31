@@ -1,67 +1,81 @@
 class Board
-	attr_reader :grid
+  DEFAULT_SIZE = 1
+  DEFAULT_NUMBER_OF_PIECES = 1
 
-	def initialize(content)
-		@grid = {}
-		[*"A".."J"].each do |l|
-			[*1..10].each {|n| @grid["#{l}#{n}".to_sym] = content.new}
-		end
-	end
+  attr_reader :grid, :number_of_pieces
 
-	def place(ship, coord, orientation = :horizontally)
-		coords = [coord]
-		ship.size.times{coords << next_coord(coords.last, orientation)}
-		put_on_grid_if_possible(coords, ship)
-	end
+  def initialize options
+    size = options.fetch(:size, DEFAULT_SIZE)
+    cell = options.fetch(:cell)
+    @number_of_pieces = options.fetch(:number_of_pieces, DEFAULT_NUMBER_OF_PIECES)
+    @grid = create_grid(size, cell)
+  end
 
-	def floating_ships?
-		ships.any?(&:floating?)
-	end
+  def create_grid size, cell
+    letter_range_based_on_size(size).map do |letter|
+      (1..dimension_size(size)).map do |number|
+        {"#{letter}#{number}".to_sym => cell.new }
+      end
+    end.flatten.reduce(:merge)
+  end
 
-	def shoot_at(coordinate)
-		raise "You cannot hit the same square twice" if  grid[coordinate].hit?
-		grid[coordinate].shoot
-	end
+  def dimension_size size
+    Math.sqrt(size).floor
+  end
 
-	def ships
-		grid.values.select{|cell|is_a_ship?(cell)}.map(&:content).uniq
-	end
+  def fill_all_content content
+    grid.each{|k,v|v.content = content}
+  end
 
-	def ships_count
-		ships.count
-	end
+  def letter_range_based_on_size size
+    ("A"..to_letter_in_alphabet(dimension_size(size)))
+  end
 
-private
+  def to_letter_in_alphabet number
+    (number.ord + 64).chr
+  end
 
- 	def next_coord(coord, orientation)
-		orientation == :vertically ? next_vertical(coord) : coord.next
-	end
+  def place ship, coordinate, orientation = :horizontally
+    raise "You can't place a ship outside the boundaries" unless coordinates_for(ship.size, coordinate, orientation).all? {|coordinate| coordinate_on_board?(coordinate)}
+    coordinates_for(ship.size, coordinate, orientation).each do |coordinate|
+      grid[coordinate].content = ship
+    end
+  end
 
-	def next_vertical(coord)
-		coord.to_s.reverse.next.reverse.to_sym
-	end
+  def coordinates_for size, coordinate, orientation
+    coordinates = [coordinate]
+    (size - 1).times {coordinates << next_coordinate(coordinates.last, orientation)}
+    coordinates
+  end
 
-	def is_a_ship?(cell)
-		cell.content.respond_to?(:sunk?) 
-	end
+  def next_coordinate coordinate, orientation
+    orientation == :horizontally ? coordinate.next : coordinate.to_s.reverse.next.reverse.to_sym
+  end
 
-	def any_coord_not_on_grid?(coords)
-		(grid.keys & coords) != coords
-	end
+  def coordinate_on_board? coordinate
+    !grid[coordinate].nil?
+  end
 
-	def any_coord_is_already_a_ship?(coords)
-		coords.any?{|coord| is_a_ship?(grid[coord])}
-	end
+  def hit cell
+    raise "Can't bomb a cell that doesn't exist" unless coordinate_on_board? cell
+    grid[cell].content.hit
+  end
 
-	def raise_errors_if_cant_place_ship(coords)
-		raise "You cannot place a ship outside of the grid" if any_coord_not_on_grid?(coords)
-		raise "You cannot place a ship on another ship" if any_coord_is_already_a_ship?(coords)
-	end
+  def all_ships_sunk?
+    ships.all?(&:sunk?)
+  end
 
-	def put_on_grid_if_possible(coords, ship)
-		raise_errors_if_cant_place_ship(coords)
-		coords.each{|coord|grid[coord].content = ship}
-	end
+  def ships
+    grid.values.map(&:content).select{|content|content.respond_to? :sunk? }.uniq
+  end
+
+  def ready?
+    ships.count == number_of_pieces
+  end
+
+  def lost?
+    all_ships_sunk? && ready?
+  end
+
 
 end
-

@@ -1,54 +1,33 @@
 class Game
-	attr_accessor :player1, :player2
-	attr_writer :turn
 
-	def initialize
-		player1, player2 = nil, nil
-	end
+  attr_reader :player_1, :player_2, :turn
 
-	def add_player(player)
-		self.player1 ? self.player2 = player : self.player1 = player unless has_two_players?
-	end
+  def initialize player_1, player_2
+    @player_1, @player_2, @turn = player_1, player_2, player_1
+  end
 
-	def opponent
-		current_player == player1 ? player2 : player1
-	end
+  def make_move position
+    opponent.register_shot position
+    return "game over" if over?
+    switch_turns
+  end
 
-	def shoots(coord)
-		opponent.receive_shot(coord)
-		raise "There is a winner you cannot shoot" if winner
-		switch_turns 
-	end
+  def opponent
+    turn == player_1 ? player_2 : player_1
+  end
 
-	def winner
-		current_player unless opponent.board.floating_ships?
-	end
+  def over?
+    opponent.lost?
+  end
 
-	def ready?
-		has_two_players? and both_players_have_boards? and both_players_have_five_ships?
-	end
+  def ready?
+    player_1.ready? && player_2.ready?
+  end
 
-	def turn 
-		@turn ||= player1
-	end
+  private
 
-	alias :current_player :turn
+  def switch_turns
+    @turn = opponent
+  end
 
-private 
-
-	def both_players_have_five_ships?
-		(player1.board.ships_count == 5) and (player2.board.ships_count == 5) 
-	end
-
-	def both_players_have_boards?
-		player1.has_board? and player2.has_board? 
-	end
-
-	def switch_turns
-		turn == player1 ? self.turn = player2 : self.turn = player1
-	end
-
-	def has_two_players?
-		!player2.nil?
-	end
 end
