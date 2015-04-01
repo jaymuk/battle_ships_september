@@ -12,3 +12,8 @@ Scenario: Registering
   Given I am on the new game page
   When I follow "No need for a name"
   Then I should see "Hello Player1"
+
+Scenario: begininga game
+  Given I am on the start page
+  when I press "Fire"
+  Then 

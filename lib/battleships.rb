@@ -1,5 +1,10 @@
 require 'sinatra/base'
-# Dir[File.dirname(__FILE__) + '/lib/*.rb'].each {|file| require file }
+require_relative 'game'
+require_relative 'player'
+require_relative 'board'
+require_relative 'cell'
+require_relative 'ship'
+require_relative 'water'
 
 class BattleShips < Sinatra::Base
 
@@ -16,9 +21,9 @@ class BattleShips < Sinatra::Base
 
   get '/start' do
     @player = params[:name]
-    # @game = Game.new(Player.new('Guillaume'), Player.new('Caron'))
-    # @player_one_name = @game.player_1.name
-    erb :take_a_shot
+    @game = Game.new(Player.new('Guillaume'), Player.new('Caron'))
+    @board = Board.new({size: 100, cell: Cell, number_of_pieces: 5})
+    erb :start
   end
 
   # start the server if ruby file executed directly
